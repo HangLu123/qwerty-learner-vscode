@@ -73,6 +73,16 @@
     ],
     "keybindings": [
       {
+      "command": "qwerty-learner.addHardWord",
+      "key": "alt+up",
+      "when": "editorTextFocus"
+    },
+    {
+      "command": "qwerty-learner.openHardWords",
+      "key": "alt+down",
+      "when": "editorTextFocus"
+    },
+      {
         "command": "qwerty-learner.start",
         "key": "shift+alt+q",
         "mac": "ctrl+shift+q",
@@ -83,7 +93,17 @@
         "key": "shift+alt+c",
         "mac": "ctrl+shift+c",
         "when": "editorTextFocus"
-      }
+      },
+      {
+      "command": "qwerty-learner.prevWord",
+      "key": "alt+left",
+      "when": "editorTextFocus"
+    },
+    {
+      "command": "qwerty-learner.nextWord",
+      "key": "alt+right",
+      "when": "editorTextFocus"
+    }
     ],
     "configuration": {
       "title": "Qwerty Learner",

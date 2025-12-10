@@ -202,6 +202,36 @@ export default class PluginState {
       this.currentExerciseCount = 0
     }
   }
+  jumpToWord(word: string) {
+  // 全词库搜索
+  const index = this.dictWords.findIndex(w => w.name === word)
+  if (index === -1) {
+    vscode.window.showWarningMessage(`未找到单词：${word}`)
+    return
+  }
+
+  // 计算章节
+  const chapter = Math.floor(index / this.chapterLength)
+  const order = index % this.chapterLength
+
+  // 修改状态
+  this._chapter = chapter
+  this._globalState.update('chapter', this._chapter)
+
+  this._order = order
+  this._globalState.update('order', this._order)
+
+  // 清空输入、错误次数等状态
+  this.curInput = ''
+  this.currentExerciseCount = 0
+
+  // 刷缓存（避免旧 wordList）
+  this._wordList.wordList = []
+
+  // 可选：提示跳转成功
+  // vscode.window.showInformationMessage(`跳转到单词：${word}`)
+}
+  
 
   nextWord() {
     if (this.order === this.wordList.length - 1) {

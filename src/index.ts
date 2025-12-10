@@ -13,8 +13,42 @@ const NEXT_WORD_COMMAND = 'qwerty-learner.nextWord'
 const TOGGLE_TRANSLATION_COMMAND = 'qwerty-learner.toggleTranslation'
 const TOGGLE_DIC_NAME_COMMAND = 'qwerty-learner.toggleDicName'
 
+const HARD_WORD_FILE = 'qwerty-learner-hard-words.json'
+
+import * as fs from 'fs'
+import * as path from 'path'
+
+function getHardWordFilePath() {
+  const home = process.env.HOME || process.env.USERPROFILE
+  return `${home}/.qwerty-learner-hard-words.json`
+}
+
+function readHardWords(filePath: string): string[] {
+  if (!fs.existsSync(filePath)) return []
+  try {
+    const content = fs.readFileSync(filePath, 'utf8')
+    return JSON.parse(content)
+  } catch {
+    return []
+  }
+}
+
+function writeHardWords(filePath: string, words: string[]) {
+  fs.writeFileSync(filePath, JSON.stringify(words, null, 2), 'utf8')
+}
+
 export function activate(context: vscode.ExtensionContext) {
   const pluginState = new PluginState(context)
+
+  const addHardWordBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -106)
+addHardWordBar.text = '$(add)'
+addHardWordBar.tooltip = '加入疑难词'
+addHardWordBar.command = 'qwerty-learner.addHardWord'
+
+const viewHardWordsBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -107)
+viewHardWordsBar.text = '$(eye)'
+viewHardWordsBar.tooltip = '查看疑难词'
+viewHardWordsBar.command = 'qwerty-learner.openHardWords'
 
   const wordBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -100)
   const inputBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -101)
@@ -102,6 +136,8 @@ export function activate(context: vscode.ExtensionContext) {
         pluginState.isStart = !pluginState.isStart
         if (pluginState.isStart) {
           initializeBar()
+          addHardWordBar.show()
+viewHardWordsBar.show()
           wordBar.show()
           inputBar.show()
           playVoiceBar.show()
@@ -112,6 +148,8 @@ export function activate(context: vscode.ExtensionContext) {
             setUpReadOnlyInterval()
           }
         } else {
+          addHardWordBar.hide()
+viewHardWordsBar.hide()
           wordBar.hide()
           inputBar.hide()
           playVoiceBar.hide()
@@ -121,6 +159,31 @@ export function activate(context: vscode.ExtensionContext) {
           removeReadOnlyInterval()
         }
       }),
+vscode.commands.registerCommand('qwerty-learner.addHardWord', async () => {
+  const filePath = getHardWordFilePath()
+  const word = pluginState.currentWord.name
+
+  let list = readHardWords(filePath)
+
+  if (!list.includes(word)) {
+    list.push(word)
+    writeHardWords(filePath, list)
+    vscode.window.showInformationMessage(`已加入疑难词：${word}`)
+  } else {
+    vscode.window.showInformationMessage(`疑难词已存在：${word}`)
+  }
+}),
+vscode.commands.registerCommand('qwerty-learner.openHardWords', async () => {
+  const filePath = getHardWordFilePath()
+
+  // 如果文件不存在则创建一个空的
+  if (!fs.existsSync(filePath)) {
+    writeHardWords(filePath, [])
+  }
+
+  const uri = vscode.Uri.file(filePath)
+  vscode.window.showTextDocument(uri)
+}),
       vscode.commands.registerCommand('qwerty-learner.changeChapter', async () => {
         const inputChapter = await vscode.window.showQuickPick(
           range(1, pluginState.totalChapters + 1).map((i) => i.toString()),
